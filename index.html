@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>敲木鱼</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: 'Microsoft YaHei', sans-serif;
+            }
+
+            :root {
+                --bg-color: #1a1a2e;
+                --text-color: #ffffff;
+                --button-bg: rgba(255, 255, 255, 0.1);
+                --button-border: rgba(255, 255, 255, 0.3);
+                --primary-color: #ffffff;
+            }
+
+            body.light-mode {
+                --bg-color: #f0f8ff;
+                --text-color: #333333;
+                --button-bg: rgba(0, 0, 0, 0.05);
+                --button-border: rgba(0, 0, 0, 0.2);
+                --primary-color: #000000;
+            }
+
+            body {
+                background-color: var(--bg-color);
+                color: var(--text-color);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100vh;
+                position: relative;
+                transition: background-color 0.5s ease, color 0.5s ease;
+                padding: 20px;
+            }
+
+            /* 重置按钮 */
+            .reset-btn {
+                position: fixed;
+                top: 20px;
+                left: 20px;
+                background-color: var(--button-bg);
+                color: var(--text-color);
+                border: 2px solid var(--button-border);
+                border-radius: 50px;
+                padding: 10px 16px;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                z-index: 100;
+            }
+
+            .reset-btn:hover {
+                background-color: rgba(255, 107, 107, 0.3);
+            }
+
+            /* 木鱼容器 */
+            .muyu-container {
+                position: relative;
+                width: 220px;
+                height: 220px;
+                margin: 30px 0;
+            }
+
+            /* 木鱼图片样式 */
+            .muyu {
+                width: 100%;
+                height: 100%;
+                cursor: pointer;
+                transition: transform 0.1s ease;
+                filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.3));
+            }
+
+            /* 点击木鱼的缩放反馈 */
+            .muyu:active {
+                transform: scale(0.96);
+            }
+
+            /* 功德文字容器 */
+            .merit-text-container {
+                position: absolute;
+                top: -30px;
+                right: -30px;
+                width: 120px;
+                height: 120px;
+                pointer-events: none;
+            }
+
+            /* 功德文字样式 */
+            .merit-text {
+                position: absolute;
+                top: 0;
+                right: 0;
+                color: var(--primary-color);
+                font-size: 24px;
+                font-weight: bold;
+                opacity: 0;
+                text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+                white-space: nowrap;
+                transition: opacity 1s ease, transform 1s ease;
+                z-index: 1;
+            }
+
+            /* 计数器样式 - 简约版 */
+            .counter {
+                font-size: 28px;
+                margin: 10px 0;
+                font-weight: bold;
+                color: var(--text-color);
+                text-align: center;
+            }
+
+            /* 主题切换按钮 */
+            .theme-toggle {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                background-color: var(--button-bg);
+                border: 2px solid var(--button-border);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.3s ease;
+                z-index: 100;
+            }
+
+            .theme-toggle:hover {
+                transform: rotate(30deg);
+            }
+
+            .theme-toggle i {
+                font-size: 24px;
+                color: var(--primary-color);
+            }
+
+            /* 确认对话框 */
+            .confirm-dialog {
+                display: none;
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background-color: var(--bg-color);
+                border: 2px solid var(--button-border);
+                border-radius: 15px;
+                padding: 20px;
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+                z-index: 1000;
+                text-align: center;
+                max-width: 90%;
+                width: 300px;
+            }
+
+            .confirm-dialog p {
+                margin-bottom: 20px;
+                font-size: 16px;
+                line-height: 1.5;
+            }
+
+            .dialog-buttons {
+                display: flex;
+                justify-content: center;
+                gap: 15px;
+            }
+
+            .dialog-btn {
+                padding: 8px 16px;
+                border: 2px solid var(--button-border);
+                border-radius: 50px;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                font-weight: bold;
+            }
+
+            .dialog-btn.confirm {
+                background-color: rgba(255, 107, 107, 0.3);
+                color: var(--text-color);
+            }
+
+            .dialog-btn.cancel {
+                background-color: var(--button-bg);
+                color: var(--text-color);
+            }
+
+            .dialog-btn:hover {
+                transform: translateY(-2px);
+            }
+
+            .overlay {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 999;
+            }
+
+            /* 动画效果 */
+            @keyframes fadeUp {
+                0% {
+                    opacity: 1;
+                    transform: translateY(0) scale(1);
+                }
+                100% {
+                    opacity: 0;
+                    transform: translateY(-50px) scale(1.2);
+                }
+            }
+
+            /* 响应式设计 */
+            @media (max-width: 768px) {
+                .muyu-container {
+                    width: 200px;
+                    height: 200px;
+                }
+
+                .merit-text {
+                    font-size: 22px;
+                }
+
+                .counter {
+                    font-size: 24px;
+                }
+            }
+
+            @media (max-width: 480px) {
+                .muyu-container {
+                    width: 180px;
+                    height: 180px;
+                }
+
+                .merit-text {
+                    font-size: 20px;
+                }
+
+                .counter {
+                    font-size: 22px;
+                }
+
+                .reset-btn {
+                    padding: 8px 14px;
+                    font-size: 13px;
+                }
+
+                .theme-toggle {
+                    width: 45px;
+                    height: 45px;
+                }
+
+                .theme-toggle i {
+                    font-size: 20px;
+                }
+            }
+        </style>
+    </head>
+    <body class="dark-mode">
+        <!-- 重置按钮 -->
+        <button class="reset-btn" id="resetBtn">
+            <i class="fas fa-redo"></i>
+            <span>重置功德</span>
+        </button>
+
+        <!-- 木鱼容器 -->
+        <div class="muyu-container">
+            <img src="/muyu_white.png" alt="木鱼" class="muyu" id="muyu">
+            <div class="merit-text-container" id="meritTextContainer"></div>
+        </div>
+        
+        <!-- 功德计数器 -->
+        <div class="counter" id="counter">功德：0</div>
+
+        <!-- 主题切换按钮 -->
+        <div class="theme-toggle" id="themeToggle">
+            <i class="fas fa-moon"></i>
+        </div>
+
+        <!-- 木鱼敲击音效 -->
+        <audio id="knockAudio" src="/muyu1.mp3"></audio>
+        
+        <!-- 确认对话框 -->
+        <div class="overlay" id="overlay"></div>
+        <div class="confirm-dialog" id="confirmDialog">
+            <p>确定要重置功德吗？</p>
+            <div class="dialog-buttons">
+                <button class="dialog-btn confirm" id="confirmReset">确定</button>
+                <button class="dialog-btn cancel" id="cancelReset">取消</button>
+            </div>
+        </div>
+
+        <!-- Font Awesome 图标 -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+
+        <script>
+            const muyu = document.getElementById('muyu');
+            const counter = document.getElementById('counter');
+            const knockAudio = document.getElementById('knockAudio');
+            const themeToggle = document.getElementById('themeToggle');
+            const resetBtn = document.getElementById('resetBtn');
+            const confirmDialog = document.getElementById('confirmDialog');
+            const overlay = document.getElementById('overlay');
+            const confirmReset = document.getElementById('confirmReset');
+            const cancelReset = document.getElementById('cancelReset');
+            const meritTextContainer = document.getElementById('meritTextContainer');
+            
+            let count = 0;
+            let isDarkMode = true;
+            let meritZIndex = 1;
+
+            // 检查本地存储中的主题偏好
+            if (localStorage.getItem('theme') === 'light') {
+                enableLightMode();
+            }
+
+            // 检查本地存储中的功德计数
+            if (localStorage.getItem('meritCount')) {
+                count = parseInt(localStorage.getItem('meritCount'));
+                counter.textContent = `功德：${count}`;
+            }
+
+            // 木鱼点击事件
+            muyu.addEventListener('click', () => {
+                // 播放敲击声音
+                knockAudio.currentTime = 0;
+                knockAudio.play();
+
+                // 增加功德计数
+                count++;
+                counter.textContent = `功德：${count}`;
+                localStorage.setItem('meritCount', count);
+
+                // 创建功德文字
+                createMeritText();
+            });
+
+            // 创建功德文字
+            function createMeritText() {
+                const meritText = document.createElement('div');
+                meritText.className = 'merit-text';
+                meritText.textContent = '功德+1';
+                meritText.style.zIndex = meritZIndex++;
+                
+                // 添加到容器
+                meritTextContainer.appendChild(meritText);
+                
+                // 触发动画
+                setTimeout(() => {
+                    meritText.style.animation = 'fadeUp 1s forwards';
+                }, 10);
+                
+                // 1秒后移除元素
+                setTimeout(() => {
+                    meritText.remove();
+                }, 1000);
+            }
+
+            // 重置按钮事件
+            resetBtn.addEventListener('click', () => {
+                showConfirmDialog();
+            });
+
+            // 显示确认对话框
+            function showConfirmDialog() {
+                confirmDialog.style.display = 'block';
+                overlay.style.display = 'block';
+            }
+
+            // 隐藏确认对话框
+            function hideConfirmDialog() {
+                confirmDialog.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+
+            // 确认重置
+            confirmReset.addEventListener('click', () => {
+                count = 0;
+                counter.textContent = `功德：${count}`;
+                localStorage.setItem('meritCount', count);
+                hideConfirmDialog();
+            });
+
+            // 取消重置
+            cancelReset.addEventListener('click', hideConfirmDialog);
+
+            // 主题切换功能
+            themeToggle.addEventListener('click', () => {
+                if (isDarkMode) {
+                    enableLightMode();
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    enableDarkMode();
+                    localStorage.setItem('theme', 'dark');
+                }
+            });
+
+            function enableLightMode() {
+                document.body.classList.add('light-mode');
+                document.body.classList.remove('dark-mode');
+                muyu.src = "/muyu_black.png";
+                isDarkMode = false;
+                
+                // 更新切换按钮图标
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            }
+
+            function enableDarkMode() {
+                document.body.classList.remove('light-mode');
+                document.body.classList.add('dark-mode');
+                muyu.src = "/muyu_white.png";
+                isDarkMode = true;
+                
+                // 更新切换按钮图标
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        </script>
+    </body>
+</html>
