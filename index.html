@@ -268,6 +268,42 @@
                 }
             }
         </style>
+        <style>
+            /* 移除移动端点击高亮 */
+            * {
+            -webkit-tap-highlight-color: transparent;
+            }
+
+            /* 为所有交互元素添加防止文本选择 */
+            .reset-btn, .muyu, .theme-toggle, .dialog-btn {
+            -webkit-user-select: none;
+            user-select: none;
+            }
+
+            /* 防止移动端长按菜单 */
+            .muyu {
+            -webkit-touch-callout: none;
+            }
+
+            /* 改善移动端触摸体验 */
+            body {
+            touch-action: manipulation;
+            }
+
+            /* 移动端特定优化 */
+            @media (max-width: 480px) {
+                body {
+                    padding: 15px;
+                    justify-content: flex-start;
+                    padding-top: 80px;
+                }
+                
+                .reset-btn {
+                    padding: 12px 18px;
+                    font-size: 15px;
+                }
+            }
+        </style>
     </head>
     <body class="dark-mode">
         <!-- 重置按钮 -->
@@ -292,7 +328,7 @@
 
         <!-- 木鱼敲击音效 -->
         <audio id="knockAudio" src="/Knock-the-wooden-fish/muyu1.mp3"></audio>
-        
+
         <!-- 确认对话框 -->
         <div class="overlay" id="overlay"></div>
         <div class="confirm-dialog" id="confirmDialog">
@@ -428,7 +464,86 @@
                 themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
             }
         </script>
+
+        <script>
+            // 添加触摸事件防止移动端延迟
+            muyu.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                // 播放敲击声音
+                knockAudio.currentTime = 0;
+                knockAudio.play();
+
+                // 增加功德计数
+                count++;
+                counter.textContent = `功德：${count}`;
+                localStorage.setItem('meritCount', count);
+
+                // 创建功德文字
+                createMeritText();
+                
+                // 添加点击反馈
+                this.style.transform = 'scale(0.96)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+            });
+
+            // 重置按钮触摸事件
+            resetBtn.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                showConfirmDialog();
+                
+                // 添加点击反馈
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+            });
+
+            // 确认按钮触摸事件
+            confirmReset.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                count = 0;
+                counter.textContent = `功德：${count}`;
+                localStorage.setItem('meritCount', count);
+                hideConfirmDialog();
+                
+                // 添加点击反馈
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+            });
+
+            // 取消按钮触摸事件
+            cancelReset.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                hideConfirmDialog();
+                
+                // 添加点击反馈
+                this.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1)';
+                }, 100);
+            });
+
+            // 主题切换按钮触摸事件
+            themeToggle.addEventListener('touchstart', function(e) {
+                e.preventDefault();
+                if (isDarkMode) {
+                    enableLightMode();
+                    localStorage.setItem('theme', 'light');
+                } else {
+                    enableDarkMode();
+                    localStorage.setItem('theme', 'dark');
+                }
+                
+                // 添加点击反馈
+                this.style.transform = 'scale(0.95) rotate(30deg)';
+                setTimeout(() => {
+                    this.style.transform = 'scale(1) rotate(0)';
+                }, 100);
+            });
+        </script>
     </body>
-
 </html>
-
